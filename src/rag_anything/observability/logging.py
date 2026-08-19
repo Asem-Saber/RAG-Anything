@@ -8,8 +8,7 @@ from structlog.types import Processor
 def configure_logging(level: str = "INFO", *, json_logs: bool = True) -> None:
     shared: list[Processor] = [
         structlog.contextvars.merge_contextvars,
-        structlog.stdlib.add_log_level,
-        structlog.stdlib.add_logger_name,
+        structlog.processors.add_log_level,
         structlog.processors.TimeStamper(fmt="iso", utc=True),
         structlog.processors.StackInfoRenderer(),
         structlog.processors.format_exc_info,
