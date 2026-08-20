@@ -28,6 +28,11 @@ class User(Base):
         PgUUID(as_uuid=True), primary_key=True, default=uuid.uuid4
     )
     email: Mapped[str] = mapped_column(String(320), unique=True, index=True)
+    # Stored lowercase (see UserRepository.normalise_username) so that "Asem"
+    # and "asem" cannot become two accounts. 32 chars is the usual handle cap.
+    username: Mapped[str] = mapped_column(String(32), unique=True, index=True)
+    first_name: Mapped[str] = mapped_column(String(100))
+    last_name: Mapped[str] = mapped_column(String(100))
     password_hash: Mapped[str] = mapped_column(String(255))
     role: Mapped[UserRole] = mapped_column(
         Enum(UserRole, name="user_role"),
@@ -43,5 +48,10 @@ class User(Base):
         DateTime(timezone=True), server_default=func.now()
     )
 
+    @property
+    def full_name(self) -> str:
+        """Display name. Names are stored as typed, so this preserves case."""
+        return f"{self.first_name} {self.last_name}"
+
     def __repr__(self) -> str:
-        return f"<User {self.id} {self.email!r} {self.role.value}>"
+        return f"<User {self.id} {self.username!r} {self.email!r} {self.role.value}>"
