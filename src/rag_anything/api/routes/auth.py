@@ -93,7 +93,7 @@ async def login(payload: LoginRequest, session: SessionDep, request: Request) ->
     users = UserRepository(session)
     user = await users.get_by_email(payload.email)
 
-    if user is None or user.password_hash is None:
+    if user is None:
         hash_password(payload.password)
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED, detail=INVALID_CREDENTIALS

@@ -1,7 +1,7 @@
-import jwt
 import uuid
 from datetime import UTC, datetime, timedelta
 
+import jwt
 import pytest
 
 from rag_anything.db.models.user import UserRole
@@ -17,7 +17,6 @@ from rag_anything.security.tokens import (
 
 SECRET = "test-secret-do-not-use-in-production"
 ALGORITHM = "HS256"
-
 
 def test_access_token_round_trips() -> None:
     user_id = uuid.uuid4()

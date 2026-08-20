@@ -9,7 +9,6 @@ MIN_PASSWORD_LENGTH = 12
 
 USERNAME_PATTERN = r"^[A-Za-z0-9_-]+$"
 
-
 class SignupRequest(BaseModel):
     email: EmailStr
     username: str = Field(min_length=3, max_length=32, pattern=USERNAME_PATTERN)
@@ -38,10 +37,10 @@ class UserOut(BaseModel):
     model_config = ConfigDict(from_attributes=True)
 
     id: uuid.UUID
-    email: EmailStr | None
-    username: str | None
-    first_name: str | None
-    last_name: str | None
+    email: EmailStr
+    username: str
+    first_name: str
+    last_name: str
     role: UserRole
     status: UserStatus
     created_at: datetime

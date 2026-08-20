@@ -4,9 +4,9 @@ import httpx
 import pytest
 from sqlalchemy.ext.asyncio import AsyncSession, async_sessionmaker, create_async_engine
 
+import rag_anything.db.models
 from rag_anything.api.deps import get_session
 from rag_anything.db.base import Base
-from rag_anything.db.models import *
 from rag_anything.main import create_app
 from rag_anything.settings import Settings, get_settings
 
@@ -40,13 +40,7 @@ async def session(engine) -> AsyncIterator[AsyncSession]:
 
 @pytest.fixture
 def test_settings() -> Settings:
-    """Settings for the app under test.
-
-    ``database_url`` is a computed property, so it cannot be passed in — point
-    ``postgres_db`` at the test database instead and the DSN follows. In
-    practice the app never opens a connection during tests anyway: the ``client``
-    fixture below overrides ``get_session`` with the test's own session.
-    """
+    """Settings for the app under test."""
     base = get_settings()
     return Settings(
         _env_file=None,
@@ -65,12 +59,7 @@ def test_settings() -> Settings:
 async def client(
     test_settings: Settings, session: AsyncSession
 ) -> AsyncIterator[httpx.AsyncClient]:
-    """An HTTP client whose requests share the test's rolled-back session.
-
-    Overriding ``get_session`` is what keeps tests isolated: everything a request
-    writes lands inside the outer transaction that the ``session`` fixture rolls
-    back on teardown, so no test can see another test's users.
-    """
+    """An HTTP client whose requests share the test's rolled-back session."""
     app = create_app(test_settings)
 
     async def override_get_session() -> AsyncIterator[AsyncSession]:
