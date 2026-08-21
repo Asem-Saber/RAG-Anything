@@ -3,7 +3,14 @@ import pytest
 from rag_anything.settings import Settings, get_settings
 
 
-def test_defaults_are_dev_safe() -> None:
+def test_defaults_are_dev_safe(monkeypatch: pytest.MonkeyPatch) -> None:
+    for var in (
+        "ENVIRONMENT",
+        "ACCESS_TOKEN_TTL_MINUTES",
+        "REFRESH_TOKEN_TTL_DAYS",
+        "JWT_ALGORITHM",
+    ):
+        monkeypatch.delenv(var, raising=False)
     settings = Settings(_env_file=None)
     assert settings.environment == "dev"
     assert settings.access_token_ttl_minutes == 15
