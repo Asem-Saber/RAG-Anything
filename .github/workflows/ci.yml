@@ -42,7 +42,7 @@ jobs:
       POSTGRES_USER: postgres
       POSTGRES_PASSWORD: postgres
       POSTGRES_DB: rag_ci
-      POSTGRES_TEST_DB: rag_ci
+      POSTGRES_TEST_DB: rag_ci_test
       JWT_SECRET: ci-only-secret-not-for-production
       ENVIRONMENT: test
 
@@ -58,6 +58,14 @@ jobs:
       
       - name: Install dependencies
         run: uv sync --all-groups
+
+      # The service container only creates POSTGRES_DB. The tests need their own
+      # database: they build the schema from Base.metadata and leave it behind,
+      # which would collide with the migrations if both shared one.
+      - name: Create the test database
+        env:
+          PGPASSWORD: postgres
+        run: psql -h localhost -U postgres -d rag_ci -c 'CREATE DATABASE rag_ci_test'
 
       - name: Migrations apply from scratch
         run: uv run alembic upgrade head
