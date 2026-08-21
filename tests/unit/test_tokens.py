@@ -15,7 +15,7 @@ from rag_anything.security.tokens import (
     refresh_expiry,
 )
 
-SECRET = "test-secret-do-not-use-in-production"
+SECRET = "test-only-secret-not-for-production"
 ALGORITHM = "HS256"
 
 def test_access_token_round_trips() -> None:
@@ -64,7 +64,7 @@ def test_token_signed_with_another_secret_is_rejected() -> None:
     token = create_access_token(
         user_id=uuid.uuid4(),
         role=UserRole.user,
-        secret="attacker-secret",
+        secret="attacker-secret-not-the-real-one",
         algorithm=ALGORITHM,
         ttl_minutes=15,
     )

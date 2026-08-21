@@ -51,7 +51,7 @@ def test_settings() -> Settings:
         postgres_user=base.postgres_user,
         postgres_password=base.postgres_password.get_secret_value(),
         postgres_db=base.postgres_test_db,
-        jwt_secret="test-secret-not-for-production",
+        jwt_secret="test-only-secret-not-for-production",
     )
 
 
