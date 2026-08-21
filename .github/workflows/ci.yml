@@ -59,9 +59,6 @@ jobs:
       - name: Install dependencies
         run: uv sync --all-groups
 
-      # The service container only creates POSTGRES_DB. The tests need their own
-      # database: they build the schema from Base.metadata and leave it behind,
-      # which would collide with the migrations if both shared one.
       - name: Create the test database
         env:
           PGPASSWORD: postgres
