@@ -1,0 +1,92 @@
+name: CI
+
+on:
+  push:
+    branches: 
+      - main
+    paths-ignore:
+      - "**.md"
+  pull_request:
+    branches:
+      - main
+
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
+env:
+  UV_FROZEN: "1"
+
+jobs:
+  test:
+    name: Tests
+    runs-on: ubuntu-latest
+    services:
+      postgres:
+        image: postgres:18-alpine
+        env:
+          POSTGRES_USER: postgres
+          POSTGRES_PASSWORD: postgres
+          POSTGRES_DB: rag_ci
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd "pg_isready -U postgres -d rag_ci"
+          --health-interval 5s
+          --health-timeout 3s
+          --health-retries 10
+
+    env:
+      POSTGRES_HOST: localhost
+      POSTGRES_PORT: "5432"
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+      POSTGRES_DB: rag_ci
+      POSTGRES_TEST_DB: rag_ci
+      JWT_SECRET: ci-only-secret-not-for-production
+      ENVIRONMENT: test
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v7
+      
+      - name: Setup UV
+        uses: astral-sh/setup-uv@v10.0.0
+        with:
+          enable-cache: true
+          cache-dependency-glob: "uv.lock"
+      
+      - name: Install dependencies
+        run: uv sync --all-groups
+
+      - name: Migrations apply from scratch
+        run: uv run alembic upgrade head
+
+      - name: Migrations reverse cleanly
+        run: uv run alembic downgrade base
+
+      - name: Run tests
+        run: uv run pytest -v
+
+      - name: Health check
+        run: |
+          uv run alembic upgrade head
+          uv run uvicorn rag_anything.main:app --host 127.0.0.1 --port 8000 > uvicorn.log 2>&1 &
+          server=$!
+          trap 'kill $server 2>/dev/null || true' EXIT
+
+          for _ in $(seq 30); do
+            curl -fsS http://127.0.0.1:8000/api/health > /dev/null && break
+            sleep 1
+          done
+
+          echo "--- /api/health"
+          curl -fsS http://127.0.0.1:8000/api/health
+          echo
+          echo "--- /api/health/ready"
+          curl -fsS http://127.0.0.1:8000/api/health/ready
+          echo
+
+      - name: Server log
+        if: failure()
+        run: cat uvicorn.log
